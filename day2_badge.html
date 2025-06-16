@@ -1,188 +1,619 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Keploy Fellowship Badge - API Testing Basics</title>
+   <title>Keploy API Fellowship Badge Generator</title>
    <style>
        * {
            margin: 0;
            padding: 0;
            box-sizing: border-box;
        }
+
        body {
            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-           background: linear-gradient(135deg, #2980b9, #6dd5fa, #ffffff);
+           background: linear-gradient(135deg, #ff6b35, #f7931e, #ffb347);
            min-height: 100vh;
            display: flex;
            align-items: center;
            justify-content: center;
            padding: 20px;
        }
+
        .container {
            background: white;
            border-radius: 20px;
-           padding: 30px;
+           padding: 40px;
            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-           max-width: 400px;
+           max-width: 500px;
            width: 100%;
-           text-align: center;
        }
+
+       .header {
+           text-align: center;
+           margin-bottom: 40px;
+       }
+
        .logo {
            width: 60px;
+           height: 30px;
            margin: 0 auto 20px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
        }
+
        .logo img {
            width: 100%;
            height: auto;
+           object-fit: contain;
        }
+
        h1 {
            color: #333;
-           font-size: 22px;
+           font-size: 28px;
+           font-weight: 700;
            margin-bottom: 10px;
        }
+
        .subtitle {
            color: #666;
-           font-size: 14px;
+           font-size: 16px;
+       }
+
+       .form-group {
            margin-bottom: 25px;
        }
-       input[type="text"],
-       input[type="email"] {
+
+       label {
+           display: block;
+           margin-bottom: 8px;
+           font-weight: 600;
+           color: #333;
+       }
+
+       input, select {
            width: 100%;
-           padding: 12px;
-           margin-bottom: 15px;
+           padding: 12px 16px;
            border: 2px solid #e0e0e0;
            border-radius: 10px;
-           font-size: 14px;
+           font-size: 16px;
+           transition: border-color 0.3s ease;
        }
-       input:focus {
+
+       input:focus, select:focus {
            outline: none;
            border-color: #ff6b35;
        }
+
+       input.error {
+           border-color: #e74c3c;
+           background-color: #fdf2f2;
+       }
+
+       .error-message {
+           color: #e74c3c;
+           font-size: 14px;
+           margin-top: 5px;
+           display: none;
+       }
+
+       .error-message.show {
+           display: block;
+       }
+
+       .badge-selector {
+           display: grid;
+           grid-template-columns: 1fr 1fr;
+           gap: 15px;
+           margin-bottom: 25px;
+       }
+
+       .badge-option {
+           padding: 20px 15px;
+           border: 2px solid #e0e0e0;
+           border-radius: 15px;
+           text-align: center;
+           cursor: pointer;
+           transition: all 0.3s ease;
+           background: white;
+           position: relative;
+       }
+
+       .badge-option.active {
+           border-color: #ff6b35;
+           background: linear-gradient(135deg, #fff5f2, #fff);
+           transform: translateY(-2px);
+           box-shadow: 0 8px 25px rgba(255, 107, 53, 0.15);
+       }
+
+       .badge-option:hover {
+           border-color: #ff6b35;
+           transform: translateY(-1px);
+       }
+
+       .badge-icon {
+           width: 40px;
+           height: 40px;
+           background: linear-gradient(45deg, #ff6b35, #f7931e);
+           border-radius: 50%;
+           margin: 0 auto 10px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           color: white;
+           font-size: 18px;
+           font-weight: bold;
+       }
+
+       .badge-title {
+           font-weight: 600;
+           color: #333;
+           font-size: 14px;
+           margin-bottom: 5px;
+       }
+
+       .badge-desc {
+           font-size: 12px;
+           color: #666;
+       }
+
        .generate-btn {
            width: 100%;
-           padding: 12px;
+           padding: 15px;
            background: linear-gradient(45deg, #ff6b35, #f7931e);
            color: white;
            border: none;
            border-radius: 10px;
-           font-size: 16px;
+           font-size: 18px;
+           font-weight: 600;
            cursor: pointer;
-           margin-top: 10px;
+           transition: transform 0.2s ease;
        }
-       .error-message {
-           color: red;
-           font-size: 12px;
-           margin-bottom: 10px;
+
+       .generate-btn:hover {
+           transform: translateY(-2px);
        }
-       .badge {
+
+       .generate-btn:active {
+           transform: translateY(0);
+       }
+
+       .generate-btn:disabled {
+           background: #ccc;
+           cursor: not-allowed;
+           transform: none;
+       }
+
+       #badge {
            margin-top: 30px;
+           border-radius: 15px;
+           overflow: hidden;
+           box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+       }
+
+       .badge-container {
+           width: 300px;
+           height: 300px;
+           position: relative;
            background: white;
            border-radius: 50%;
-           width: 280px;
-           height: 280px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           margin: 0 auto;
+           box-shadow: 0 15px 35px rgba(255, 107, 53, 0.2);
+           border: 8px solid transparent;
+           background-clip: padding-box;
+       }
+
+       .badge-container::before {
+           content: '';
+           position: absolute;
+           top: -8px;
+           left: -8px;
+           right: -8px;
+           bottom: -8px;
+           background: linear-gradient(135deg, #ff6b35, #f7931e, #ffb347);
+           border-radius: 50%;
+           z-index: -1;
+       }
+
+       .badge-inner {
+           width: 260px;
+           height: 260px;
+           background: white;
+           border-radius: 50%;
            display: flex;
            flex-direction: column;
            align-items: center;
            justify-content: center;
            text-align: center;
-           box-shadow: 0 10px 30px rgba(0,0,0,0.15);
            position: relative;
-           margin-left: auto;
-           margin-right: auto;
+           padding: 20px;
        }
-       .badge img {
-           width: 40px;
+
+       .badge-logo {
+           width: 50px;
+           height: auto;
+           margin-bottom: 8px;
+           object-fit: contain;
+       }
+
+       .badge-fellowship {
+           font-size: 10px;
+           font-weight: 600;
+           color: #666;
+           text-transform: uppercase;
+           letter-spacing: 1px;
            margin-bottom: 8px;
        }
-       .badge h2 {
-           font-size: 16px;
+
+       .badge-main-title {
+           font-size: 18px;
+           font-weight: 700;
            background: linear-gradient(45deg, #ff6b35, #f7931e);
            -webkit-background-clip: text;
            -webkit-text-fill-color: transparent;
-           margin-bottom: 6px;
+           background-clip: text;
+           margin-bottom: 12px;
+           text-transform: uppercase;
+           letter-spacing: 0.5px;
+           line-height: 1.2;
+           max-width: 180px;
+           word-wrap: break-word;
        }
-       .badge p {
-           font-size: 12px;
-           color: #555;
-           margin: 2px 0;
+
+       .badge-participant-name {
+           font-size: 14px;
+           font-weight: 600;
+           color: #333;
+           margin-bottom: 12px;
+           max-width: 160px;
+           word-wrap: break-word;
+           line-height: 1.2;
        }
+
+       .badge-achievement {
+           font-size: 9px;
+           color: #666;
+           text-transform: uppercase;
+           letter-spacing: 0.5px;
+           margin-bottom: 8px;
+       }
+
+       .badge-date {
+           font-size: 9px;
+           color: #999;
+           font-weight: 500;
+       }
+
+       .badge-decorative {
+           position: absolute;
+           width: 100%;
+           height: 100%;
+           top: 0;
+           left: 0;
+           pointer-events: none;
+       }
+
+       .badge-decorative::before {
+           content: '';
+           position: absolute;
+           top: 20px;
+           left: 50%;
+           transform: translateX(-50%);
+           width: 30px;
+           height: 3px;
+           background: linear-gradient(45deg, #ff6b35, #f7931e);
+           border-radius: 2px;
+       }
+
+       .badge-decorative::after {
+           content: '';
+           position: absolute;
+           bottom: 20px;
+           left: 50%;
+           transform: translateX(-50%);
+           width: 30px;
+           height: 3px;
+           background: linear-gradient(45deg, #ff6b35, #f7931e);
+           border-radius: 2px;
+       }
+
+       .badge-stars {
+           position: absolute;
+           top: 35px;
+           left: 50%;
+           transform: translateX(-50%);
+           display: flex;
+           gap: 5px;
+       }
+
+       .star {
+           width: 8px;
+           height: 8px;
+           background: linear-gradient(45deg, #ff6b35, #f7931e);
+           clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+       }
+
        .download-btn {
            margin-top: 20px;
-           padding: 10px 20px;
+           padding: 12px 30px;
            background: linear-gradient(45deg, #28a745, #20c997);
            color: white;
            border: none;
-           border-radius: 8px;
-           font-size: 14px;
+           border-radius: 10px;
+           font-size: 16px;
+           font-weight: 600;
            cursor: pointer;
+           transition: transform 0.2s ease;
+       }
+
+       .download-btn:hover {
+           transform: translateY(-2px);
+       }
+
+       #badgeContainer {
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+       }
+
+       .badge-ribbon {
+           position: absolute;
+           top: -20px;
+           left: 50%;
+           transform: translateX(-50%);
+           width: 40px;
+           height: 60px;
+           background: linear-gradient(45deg, #ff6b35, #f7931e);
+           clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+       }
+
+       @media (max-width: 768px) {
+           .container {
+               padding: 20px;
+           }
+          
+           .badge-selector {
+               grid-template-columns: 1fr;
+           }
+          
+           .badge-container {
+               width: 250px;
+               height: 250px;
+           }
+          
+           .badge-inner {
+               width: 210px;
+               height: 210px;
+               padding: 15px;
+           }
+          
+           .badge-main-title {
+               font-size: 16px;
+           }
+          
+           .badge-logo {
+               width: 40px;
+           }
+          
+           .badge-participant-name {
+               font-size: 12px;
+               max-width: 140px;
+           }
        }
    </style>
 </head>
 <body>
    <div class="container">
-       <div class="logo">
-           <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Keploy_Logo.png" alt="Keploy Logo">
-       </div>
-       <h1>Generate your Keploy API Fellowship Badge</h1>
-       <p class="subtitle">Session: API Testing Basics</p>
-       <form id="badgeForm">
-           <input type="text" id="name" placeholder="Enter your name" required>
-           <input type="email" id="email" placeholder="Enter your registered email" required>
-           <div class="error-message" id="errorMessage"></div>
-           <button class="generate-btn" type="submit">Generate Badge</button>
-       </form>
-       <div id="badgeContainer" style="display: none;">
-           <div class="badge" id="badgeDisplay">
-               <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Keploy_Logo.png" alt="Logo">
-               <h2>API Testing Basics</h2>
-               <p id="badgeName"></p>
-               <p>Session Completed</p>
-               <p id="badgeDate"></p>
+       <div class="header">
+           <div class="logo">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Keploy_Logo.png" alt="Keploy Logo">
            </div>
+           <h1>Generate your Keploy API Fellowship Badge</h1>
+           <p class="subtitle">Session: API Fundamentals</p>
+       </div>
+
+       <form id="badgeForm">
+           <div class="form-group">
+               <label for="participantName">Full Name</label>
+               <input type="text" id="participantName" name="participantName" required placeholder="Enter your full name">
+               <div class="error-message" id="nameError">Please enter your full name.</div>
+           </div>
+
+           <div class="form-group">
+               <label for="email">Email Address</label>
+               <input type="email" id="email" name="email" required placeholder="Enter your email address">
+               <div class="error-message" id="emailError">This email is not authorized to generate badges.</div>
+           </div>
+
+           <button type="submit" class="generate-btn">Generate Badge</button>
+       </form>
+
+       <div id="badgeContainer" style="display: none;">
+           <div id="badge"></div>
            <button class="download-btn" onclick="downloadBadge()">Download Badge</button>
        </div>
    </div>
+
    <script>
-       const allowedEmails = [
-        "pratik.mahalle@keploy.io", 
-        "mahallepratik683@gmail.com", 
-        "devrel@keploy.io"];
+       let selectedBadge = 'API-Fundamentals';
+       let badgeData = {};
+
+       // Authorized emails list - Add emails here that are allowed to generate badges
+       const authorizedEmails = [
+           'mahallepratik683@gmail.com',
+           'amaanbhati@keploy.io'
+           // Add more authorized emails here
+       ];
+
+       // Badge type mapping
+       const badgeTypes = {
+           'API-Fundamentals': {
+               title: 'Core API Concepts',
+               subtitle: 'Fundamentals & Best Practices',
+               achievement: 'Session Completed'
+           },
+       };
+
+       // Email validation function
+       function isEmailAuthorized(email) {
+           return authorizedEmails.includes(email.toLowerCase().trim());
+       }
+
+       // Form validation
+       function validateForm() {
+           const nameInput = document.getElementById('participantName');
+           const emailInput = document.getElementById('email');
+           const nameError = document.getElementById('nameError');
+           const emailError = document.getElementById('emailError');
+           
+           let isValid = true;
+
+           // Reset previous errors
+           nameInput.classList.remove('error');
+           emailInput.classList.remove('error');
+           nameError.classList.remove('show');
+           emailError.classList.remove('show');
+
+           // Validate name
+           if (!nameInput.value.trim()) {
+               nameInput.classList.add('error');
+               nameError.textContent = 'Please enter your full name.';
+               nameError.classList.add('show');
+               isValid = false;
+           }
+
+           // Validate email
+           if (!emailInput.value.trim()) {
+               emailInput.classList.add('error');
+               emailError.textContent = 'Please enter your email address.';
+               emailError.classList.add('show');
+               isValid = false;
+           } else if (!isEmailAuthorized(emailInput.value)) {
+               emailInput.classList.add('error');
+               emailError.textContent = 'This email is not authorized to generate badges. Please contact the administrator.';
+               emailError.classList.add('show');
+               isValid = false;
+           }
+
+           return isValid;
+       }
+
+       // Real-time email validation
+       document.getElementById('email').addEventListener('blur', function() {
+           const emailInput = this;
+           const emailError = document.getElementById('emailError');
+           
+           if (emailInput.value.trim() && !isEmailAuthorized(emailInput.value)) {
+               emailInput.classList.add('error');
+               emailError.textContent = 'This email is not authorized to generate badges.';
+               emailError.classList.add('show');
+           } else {
+               emailInput.classList.remove('error');
+               emailError.classList.remove('show');
+           }
+       });
+
+       // Badge selection
+       document.querySelectorAll('.badge-option').forEach(option => {
+           option.addEventListener('click', () => {
+               document.querySelectorAll('.badge-option').forEach(opt => opt.classList.remove('active'));
+               option.classList.add('active');
+               selectedBadge = option.dataset.badge;
+           });
+       });
+
+       // Form submission
        document.getElementById('badgeForm').addEventListener('submit', function(e) {
            e.preventDefault();
-           const name = document.getElementById('name').value.trim();
-           const email = document.getElementById('email').value.trim();
-           const errorMessage = document.getElementById('errorMessage');
-           if (!allowedEmails.includes(email)) {
-               errorMessage.innerText = "You are not authorized to generate the badge. Please use your registered email.";
-               document.getElementById('badgeContainer').style.display = 'none';
+           
+           if (!validateForm()) {
                return;
-           } else {
-               errorMessage.innerText = "";
            }
-           const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-           document.getElementById('badgeName').innerText = name;
-           document.getElementById('badgeDate').innerText = date;
-           document.getElementById('badgeContainer').style.display = 'block';
-           document.getElementById('badgeDisplay').scrollIntoView({ behavior: 'smooth' });
+          
+           const formData = new FormData(e.target);
+           badgeData = {
+               name: formData.get('participantName'),
+               email: formData.get('email'),
+               badgeType: selectedBadge,
+               date: new Date().toLocaleDateString('en-US', {
+                   year: 'numeric',
+                   month: 'short',
+                   day: 'numeric'
+               })
+           };
+
+           generateBadge(badgeData);
        });
+
+       function generateBadge(data) {
+           const badge = document.getElementById('badge');
+           const badgeInfo = badgeTypes[data.badgeType];
+          
+           badge.innerHTML = `
+               <div class="badge-container">
+                   <div class="badge-ribbon"></div>
+                   <div class="badge-inner">
+                       <div class="badge-decorative">
+                           <div class="badge-stars">
+                               <div class="star"></div>
+                               <div class="star"></div>
+                               <div class="star"></div>
+                           </div>
+                       </div>
+                      
+                       <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Keploy_Logo.png" alt="Keploy Logo" class="badge-logo">
+                       <div class="badge-fellowship">API Fellowship</div>
+                       <div class="badge-main-title">${badgeInfo.title}</div>
+                       <div class="badge-participant-name">${data.name}</div>
+                       <div class="badge-achievement">${badgeInfo.achievement}</div>
+                       <div class="badge-date">${data.date}</div>
+                   </div>
+               </div>
+           `;
+          
+           document.getElementById('badgeContainer').style.display = 'flex';
+           badge.scrollIntoView({ behavior: 'smooth' });
+       }
+
        function downloadBadge() {
-           const badge = document.getElementById('badgeDisplay');
+           const badge = document.getElementById('badge');
+          
+           // Check if html2canvas is already loaded
            if (typeof html2canvas !== 'undefined') {
-               captureBadge();
+               generateImage();
            } else {
+               // Load html2canvas library
                const script = document.createElement('script');
                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-               script.onload = captureBadge;
+               script.onload = generateImage;
                document.head.appendChild(script);
            }
-           function captureBadge() {
-               html2canvas(badge).then(canvas => {
+          
+           function generateImage() {
+               html2canvas(badge, {
+                   scale: 3,
+                   useCORS: true,
+                   backgroundColor: 'transparent',
+                   width: 300,
+                   height: 300,
+                   logging: false,
+                   allowTaint: true
+               }).then(canvas => {
                    const link = document.createElement('a');
-                   link.download = 'Keploy_Badge.png';
-                   link.href = canvas.toDataURL();
+                   const badgeInfo = badgeTypes[badgeData.badgeType];
+                   link.download = `${badgeData.name.replace(/\s+/g, '_')}_${badgeInfo.title.replace(/\s+/g, '_')}_Badge.png`;
+                   link.href = canvas.toDataURL('image/png', 1.0);
+                   document.body.appendChild(link);
                    link.click();
+                   document.body.removeChild(link);
+               }).catch(error => {
+                   console.error('Error generating badge:', error);
+                   alert('There was an error generating the badge. Please try again.');
                });
            }
        }
